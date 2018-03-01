@@ -2,11 +2,16 @@
 * @providesModule react-native-link-preview
 */
 
+/**
+* @providesModule react-native-link-preview
+*/
+
 const cheerio = require('cheerio-without-node-native');
 const urlObj = require('url');
 const { fetch } = require('cross-fetch');
 
 const { REGEX_VALID_URL } = require('./constants');
+const WWW_URL_PATTERN = /^www\./i;
 
 exports.getPreview = function(text, options) {
   return new Promise((resolve, reject) => {
@@ -21,11 +26,13 @@ exports.getPreview = function(text, options) {
     text.split(' ').forEach(token => {
       if (REGEX_VALID_URL.test(token) && !detectedUrl) {
         detectedUrl = token;
+      } else if (WWW_URL_PATTERN.test(token) && !detectedUrl) {
+        detectedUrl = token;
       }
     });
 
     if (detectedUrl) {
-      fetch(detectedUrl)
+      fetch(`${REGEX_VALID_URL.test(detectedUrl) ? detectedUrl : `http://${detectedUrl}`}`)
         .then(response => response.text())
         .then(text => {
           resolve(parseResponse(text, detectedUrl, options || {}));
